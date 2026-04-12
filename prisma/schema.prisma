@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  JUNIOR
+  SENIOR
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  password     String
+  role         Role      @default(STUDENT)
+  verified     Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  supervisorId String?
+  supervisor   User?     @relation("StudentSupervisor", fields: [supervisorId], references: [id])
+  students     User[]    @relation("StudentSupervisor")
+  workLogs     WorkLog[]
+  timerSessions TimerSession[]
+}
+
+model WorkLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hours       Float
+  description String
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+}
+
+model TimerSession {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startTime DateTime
+  endTime   DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model OtpVerification {
+  id        String   @id @default(cuid())
+  email     String
+  otp       String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([email])
+}
